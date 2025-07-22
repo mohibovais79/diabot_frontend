@@ -3,7 +3,8 @@ import { BotIcon, ConfidenceIcon } from './Icons';
 export const ChatMessage = ({ message }) => {
     const isBot = message.sender === 'bot';
 
-    const formatAnswer = (text) => {
+    // This function can be used to format text with bullet points if needed
+    const formatText = (text) => {
         if (!text) return '';
         return text.split('').map((part, index) => {
             if (index === 0) return part;
@@ -18,27 +19,38 @@ export const ChatMessage = ({ message }) => {
                     <BotIcon />
                 </div>
                 <div className="w-full max-w-xl p-4 rounded-b-xl rounded-tr-xl bg-white shadow-md border border-gray-100">
-                    <p className="text-gray-800 leading-relaxed">{formatAnswer(message.answer)}</p>
+                    {/* Display the main LLM answer */}
+                    <p className="text-gray-800 leading-relaxed">{formatText(message.answer)}</p>
 
-                    {message.matched_question && (
+                    {/* Check for score or reference to decide if retrieved info exists */}
+                    {message.score && (
                         <div className="mt-4 pt-3 border-t border-gray-200/80 text-xs text-gray-500 space-y-2">
                             <div className="flex items-center text-green-700 bg-green-100/80 px-2 py-1 rounded-full text-[11px] font-semibold self-start w-fit">
                                 <ConfidenceIcon />
                                 Confidence: {Math.round(message.score * 100)}%
                             </div>
-                            <div>
-                                <p className="font-semibold text-gray-600">Related Question:</p>
-                                <p className="italic">"{message.matched_question.replace(/^\d+\.\s+/, '')}"</p>
-                            </div>
+
+                            {/* Display the raw retrieved answer */}
+                            {message.retrieved_answer && (
+                                <div>
+                                    <p className="font-semibold text-gray-600">Retrieved Information:</p>
+                                    <p className="italic bg-gray-50 p-2 rounded-md mt-1">"{formatText(message.retrieved_answer)}"</p>
+                                </div>
+                            )}
+
+                            {/* --- FIX: Display the reference link directly --- */}
                             {message.reference && (
-                                <a
-                                    href={message.reference}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-indigo-600 hover:underline font-medium mt-2 inline-block"
-                                >
-                                    View Source
-                                </a>
+                                <div>
+                                    <p className="font-semibold text-gray-600 mt-2">Source:</p>
+                                    <a
+                                        href={message.reference}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-indigo-600 hover:underline break-all"
+                                    >
+                                        {message.reference}
+                                    </a>
+                                </div>
                             )}
                         </div>
                     )}
@@ -47,6 +59,7 @@ export const ChatMessage = ({ message }) => {
         );
     }
 
+    // User message remains the same
     return (
         <div className="flex justify-end">
             <div className="max-w-xl p-3 px-4 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-md">
@@ -55,3 +68,5 @@ export const ChatMessage = ({ message }) => {
         </div>
     );
 };
+
+export default ChatMessage;

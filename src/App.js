@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { WelcomeScreen } from './components/WelcomeScreen';
+import { useEffect, useRef, useState } from 'react';
 import { ChatMessage } from './components/ChatMessage';
-import { MessageInput } from './components/MessageInput';
 import { BotIcon } from './components/Icons';
+import { MessageInput } from './components/MessageInput';
+import { WelcomeScreen } from './components/WelcomeScreen';
 
 export default function App() {
     const [view, setView] = useState('welcome');
@@ -36,11 +36,26 @@ export default function App() {
         setIsLoading(true);
 
         try {
-            const response = await fetch(`${BACKEND_URL}/ask/?query=${encodeURIComponent(text)}`);
+            // --- CHANGE 1: Update the endpoint URL ---
+            const response = await fetch(`${BACKEND_URL}/ask-agent/?query=${encodeURIComponent(text)}`);
+
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
             const botResponseData = await response.json();
-            const botMessage = { sender: 'bot', ...botResponseData, id: Date.now() + 1 };
+
+            // --- CHANGE 2: Adapt to the new response structure from the agent ---
+            const botMessage = {
+                sender: 'bot',
+                // The main answer is now the synthesized response from the LLM
+                answer: botResponseData.llm_answer,
+                // The other fields map directly from the new response
+                matched_question: botResponseData.matched_question,
+                reference: botResponseData.reference,
+                score: botResponseData.score,
+                id: Date.now() + 1,
+            };
             setMessages((prev) => [...prev, botMessage]);
+
         } catch (error) {
             console.error("Failed to fetch from backend:", error);
             const errorMessage = {
@@ -55,22 +70,16 @@ export default function App() {
     };
 
     return (
-        // FIX: Add 'relative' to the root container to position children correctly
         <div className="font-sans bg-gray-100 h-screen overflow-hidden relative">
-
-            {/* Welcome Screen Container */}
             <div className={`transition-opacity duration-500 ease-in-out w-full h-full absolute top-0 left-0 ${view === 'welcome' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                 <WelcomeScreen onStartChat={() => setView('chat')} />
             </div>
-
-            {/* Chat Screen Container */}
             <div className={`flex flex-col h-full w-full absolute top-0 left-0 transition-opacity duration-500 ease-in-out ${view === 'chat' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                 <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200/80 p-4 shadow-sm z-10">
                     <h1 className="text-xl font-bold text-center text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-700">
                         Diabetes Focus Chat
                     </h1>
                 </header>
-
                 <main ref={chatWindowRef} className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 bg-gray-100">
                     <div className="max-w-3xl mx-auto space-y-6">
                         {messages.map((msg) => (
@@ -90,7 +99,6 @@ export default function App() {
                         )}
                     </div>
                 </main>
-
                 <footer className="max-w-3xl mx-auto w-full">
                     <MessageInput onSendMessage={handleSendMessage} isLoading={isLoading} />
                 </footer>
