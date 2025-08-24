@@ -1,4 +1,4 @@
-import { BotIcon, ConfidenceIcon } from './Icons';
+import { ConfidenceIcon } from './Icons';
 
 export const ChatMessage = ({ message }) => {
     const isBot = message.sender === 'bot';
@@ -16,8 +16,13 @@ export const ChatMessage = ({ message }) => {
         return (
             <div className="flex items-start gap-3">
                 <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
-                    <BotIcon />
+                    <img
+                        src="/logo192.png"
+                        alt="My Bot"
+                        className="w-6 h-6 object-contain"
+                    />
                 </div>
+
                 <div className="w-full max-w-xl p-4 rounded-b-xl rounded-tr-xl bg-white shadow-md border border-gray-100">
                     {/* Display the main LLM answer */}
                     <p className="text-gray-800 leading-relaxed">{formatText(message.answer)}</p>
